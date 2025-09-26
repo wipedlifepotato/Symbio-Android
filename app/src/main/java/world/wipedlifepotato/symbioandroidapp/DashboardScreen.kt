@@ -20,12 +20,54 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import android.widget.Toast
+import androidx.compose.foundation.horizontalScroll
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
-
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FreelanceMenu(navController: NavController) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        Text(
+            text = "Freelance System",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            MenuColumn(navController, listOf("Tasks" to "Tasks", "Tickets" to "Tickets"))
+            MenuColumn(navController, listOf("Disputes" to "Disputes", "Chats" to "Chats"))
+            MenuColumn(navController, listOf("Profiles" to "Profiles", "Profile" to "Profile"))
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MenuColumn(navController: NavController, items: List<Pair<String, String>>) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        items.forEach { (label, route) ->
+            Button(
+                onClick = { navController.navigate(route) },
+                modifier = Modifier
+                    .width(140.dp)
+                    .height(56.dp),
+                shape = MaterialTheme.shapes.medium // красивые скругления
+            ) {
+                Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+    }
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -217,7 +259,8 @@ fun DashboardScreen(
                             Text(it, color = MaterialTheme.colorScheme.primary)
                         }
                     }
-                }
+                } // End Send Card
+                FreelanceMenu(navController)
             }
         }
     }

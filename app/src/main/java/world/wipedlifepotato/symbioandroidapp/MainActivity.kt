@@ -127,7 +127,6 @@ class MainActivity : ComponentActivity() {
                                 if (newToken.isNotEmpty()) {
                                     token = newToken
                                     coroutineScope.launch { saveToken(token) }
-                                    // После сохранения токена можно перейти в dashboard
                                     navController.navigate("dashboard") {
                                         popUpTo("login") { inclusive = true }
                                     }
@@ -153,6 +152,24 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             } }
+                            composable("Tasks") {
+                                TaskScreen(navController=navController)
+                            }
+                            composable("Profile") {
+                                ProfileScreen(navController=navController)
+                            }
+                            composable("Profiles") {
+                                ProfilesScreen(navController=navController)
+                            }
+                            composable("Disputes") {
+                                DisputesScreen(navController=navController)
+                            }
+                            composable("Tickets") {
+                                TicketScreen(navController=navController)
+                            } // done
+                            composable("Chats") {
+                                ChatScreen(navController=navController)
+                            }
                             composable("dashboard") {
                                 DashboardScreen(
                                     navController = navController,
