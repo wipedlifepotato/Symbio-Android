@@ -8,8 +8,10 @@ import kotlinx.coroutines.withContext
 import java.net.Proxy
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -48,18 +50,61 @@ suspend fun fetchCaptcha(): Pair<String, android.graphics.Bitmap?> = withContext
 
 suspend fun networkRequest(
     path: String,
-    fields: Map<String, String>,
-    token: String? = null
-): Pair<Boolean, JsonObject?> = withContext(Dispatchers.IO) {
+    fields: Map<String, Any> = emptyMap(),
+    token: String? = null,
+    method: String = "POST"
+): Pair<Boolean, kotlinx.serialization.json.JsonElement?> = withContext(Dispatchers.IO) {
     val proxy = Proxy(Proxy.Type.HTTP, java.net.InetSocketAddress("localhost", 4444))
     val client = OkHttpClient.Builder().proxy(proxy).build()
 
-    val json = buildJsonObject { fields.forEach { (k, v) -> put(k, v) } }
-    Log.d("RequestJsonBody", json.toString())
-
     val requestBuilder = Request.Builder()
         .url("$BASE_URL$path")
-        .post(RequestBody.create("application/json".toMediaTypeOrNull(), json.toString()))
+
+    when (method.uppercase()) {
+        "GET" -> {
+            requestBuilder.get()
+        }
+        "POST" -> {
+            val json = buildJsonObject {
+                fields.forEach { (k, v) ->
+                    when (v) {
+                        is Int -> put(k, v)
+                        is Long -> put(k, v)
+                        is Float -> put(k, v)
+                        is Double -> put(k, v)
+                        is Boolean -> put(k, v)
+                        is List<*> -> putJsonArray(k) { v.forEach { add(JsonPrimitive(it.toString())) } }
+                        else -> put(k, v.toString())
+                    }
+                }
+            }
+            Log.d("RequestJsonBody", json.toString())
+            requestBuilder.post(RequestBody.create("application/json".toMediaTypeOrNull(), json.toString()))
+        }
+        "PUT" -> {
+            val json = buildJsonObject {
+                fields.forEach { (k, v) ->
+                    when (v) {
+                        is Int -> put(k, v)
+                        is Long -> put(k, v)
+                        is Float -> put(k, v)
+                        is Double -> put(k, v)
+                        is Boolean -> put(k, v)
+                        is List<*> -> putJsonArray(k) { v.forEach { add(JsonPrimitive(it.toString())) } }
+                        else -> put(k, v.toString())
+                    }
+                }
+            }
+            Log.d("RequestJsonBody", json.toString())
+            requestBuilder.put(RequestBody.create("application/json".toMediaTypeOrNull(), json.toString()))
+        }
+        "DELETE" -> {
+            requestBuilder.delete()
+        }
+        else -> {
+            throw IllegalArgumentException("Unsupported HTTP method: $method")
+        }
+    }
 
     // Добавляем заголовок авторизации, если есть токен
     if (!token.isNullOrEmpty()) {
@@ -75,7 +120,7 @@ suspend fun networkRequest(
             Log.d("RequestBody_", body ?: "----")
             Log.d("RequestBody", response.toString())
 
-            val jsonResponse = if (!body.isNullOrEmpty()) Json.parseToJsonElement(body).jsonObject else null
+            val jsonResponse = if (!body.isNullOrEmpty()) Json.parseToJsonElement(body) else null
             val success = response.isSuccessful
 
             return@withContext success to jsonResponse
@@ -125,7 +170,7 @@ suspend fun sendBitcoin(
     }
 }
 
-suspend fun doLogin(username: String, password: String, captchaId: String, captchaAnswer: String): Pair<Boolean, JsonObject?> =
+suspend fun doLogin(username: String, password: String, captchaId: String, captchaAnswer: String): Pair<Boolean, kotlinx.serialization.json.JsonElement?> =
     networkRequest("/auth", mapOf(
         "username" to username,
         "password" to password,
@@ -133,7 +178,7 @@ suspend fun doLogin(username: String, password: String, captchaId: String, captc
         "captcha_answer" to captchaAnswer
     ))
 
-suspend fun doRestore(username: String, mnemonic: String, newPassword: String, captchaId: String, captchaAnswer: String): Pair<Boolean, JsonObject?> =
+suspend fun doRestore(username: String, mnemonic: String, newPassword: String, captchaId: String, captchaAnswer: String): Pair<Boolean, kotlinx.serialization.json.JsonElement?> =
     networkRequest("/restoreuser", mapOf(
         "username" to username,
         "mnemonic" to mnemonic,
@@ -141,5 +186,13 @@ suspend fun doRestore(username: String, mnemonic: String, newPassword: String, c
         "captcha_id" to captchaId,
         "captcha_answer" to captchaAnswer
     ))
+
+suspend fun getUsernameById(userId: Int, token: String): String {
+    val (success, data) = networkRequest("/profile/by_id?user_id=$userId", mapOf(), token, "GET")
+    if (success && data != null && data is kotlinx.serialization.json.JsonObject) {
+        return data["username"]?.jsonPrimitive?.content ?: "User $userId"
+    }
+    return "User $userId"
+}
 
 

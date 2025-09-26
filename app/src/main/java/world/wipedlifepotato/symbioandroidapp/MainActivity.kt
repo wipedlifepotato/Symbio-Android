@@ -63,29 +63,31 @@ class MainActivity : ComponentActivity() {
                         loading = true
                         try {
                             // 1. /ownID
-                            val (ownIdSuccess, ownIdData) = networkRequest("/api/ownID", emptyMap(), token)
+                            val (ownIdSuccess, ownIdData) = networkRequest("/api/ownID", emptyMap(), token, "GET")
                             Log.d("GetOwnID", ownIdData.toString())
-                            if (ownIdSuccess && ownIdData != null && ownIdData.containsKey("user_id")) {
+                            if (ownIdSuccess && ownIdData != null && ownIdData is kotlinx.serialization.json.JsonObject && ownIdData.containsKey("user_id")) {
                                 val userId = ownIdData["user_id"]?.jsonPrimitive?.int ?: throw Exception("No user_id")
 
                                 // 2. /profile/by_id
                                 val (profileSuccess, profileData) = networkRequest(
                                     "/profile/by_id?user_id=$userId",
                                     emptyMap(),
-                                    token
+                                    token,
+                                    "GET"
                                 )
                                 Log.d("ProfileData", profileData.toString())
-                                if (profileSuccess && profileData != null) {
+                                if (profileSuccess && profileData != null && profileData is kotlinx.serialization.json.JsonObject) {
                                     userProfile = profileData
 
                                     // 3. /api/wallet?currency=BTC
                                     val (walletSuccess, walletData) = networkRequest(
                                         "/api/wallet?currency=BTC",
                                         emptyMap(),
-                                        token
+                                        token,
+                                        "GET"
                                     )
                                     Log.d("WalletData", walletData.toString())
-                                    if (walletSuccess && walletData != null) {
+                                    if (walletSuccess && walletData != null && walletData is kotlinx.serialization.json.JsonObject) {
                                         wallet = walletData
                                     } else {
                                         errorMessage = "Failed to fetch wallet"
@@ -123,7 +125,8 @@ class MainActivity : ComponentActivity() {
                         ) {
                             composable("home") { HomeScreen(navController) }
                             composable("login") { LoginScreen(navController) { data ->
-                                val newToken = data["token"]?.jsonPrimitive?.content ?: ""
+                                val jsonObj = data as? kotlinx.serialization.json.JsonObject
+                                val newToken = jsonObj?.get("token")?.jsonPrimitive?.content ?: ""
                                 if (newToken.isNotEmpty()) {
                                     token = newToken
                                     coroutineScope.launch { saveToken(token) }
@@ -133,7 +136,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             } }
                             composable("register") { RegisterScreen(navController) { data ->
-                                val newToken = data["token"]?.jsonPrimitive?.content ?: ""
+                                val jsonObj = data as? kotlinx.serialization.json.JsonObject
+                                val newToken = jsonObj?.get("token")?.jsonPrimitive?.content ?: ""
                                 if (newToken.isNotEmpty()) {
                                     token = newToken
                                     coroutineScope.launch { saveToken(token) }
@@ -143,7 +147,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             } }
                             composable("restore") { RestoreScreen(navController) { data ->
-                                val newToken = data["encrypted"]?.jsonPrimitive?.content ?: ""
+                                val jsonObj = data as? kotlinx.serialization.json.JsonObject
+                                val newToken = jsonObj?.get("encrypted")?.jsonPrimitive?.content ?: ""
                                 if (newToken.isNotEmpty()) {
                                     token = newToken
                                     coroutineScope.launch { saveToken(token) }
@@ -153,22 +158,22 @@ class MainActivity : ComponentActivity() {
                                 }
                             } }
                             composable("Tasks") {
-                                TaskScreen(navController=navController)
+                                TaskScreen(navController=navController, token=token)
                             }
                             composable("Profile") {
-                                ProfileScreen(navController=navController)
+                                ProfileScreen(navController=navController, token=token)
                             }
                             composable("Profiles") {
-                                ProfilesScreen(navController=navController)
+                                ProfilesScreen(navController=navController, token=token)
                             }
                             composable("Disputes") {
-                                DisputesScreen(navController=navController)
+                                DisputesScreen(navController=navController, token=token)
                             }
                             composable("Tickets") {
-                                TicketScreen(navController=navController)
+                                TicketScreen(navController=navController, token=token)
                             } // done
                             composable("Chats") {
-                                ChatScreen(navController=navController)
+                                ChatScreen(navController=navController, token=token)
                             }
                             composable("dashboard") {
                                 DashboardScreen(

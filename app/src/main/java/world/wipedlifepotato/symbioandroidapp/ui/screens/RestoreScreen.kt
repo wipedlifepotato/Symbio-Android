@@ -18,13 +18,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonPrimitive
 import world.wipedlifepotato.symbioandroidapp.doRestore
 import world.wipedlifepotato.symbioandroidapp.fetchCaptcha
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RestoreScreen(navController: NavHostController, onSuccess: (JsonObject) -> Unit) {
+fun RestoreScreen(navController: NavHostController, onSuccess: (JsonElement) -> Unit) {
     var username by remember { mutableStateOf("") }
     var mnemonic by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -120,7 +121,7 @@ fun RestoreScreen(navController: NavHostController, onSuccess: (JsonObject) -> U
                         onClick = {
                             scope.launch {
                                 val (success, data) = doRestore(username, mnemonic, newPassword, captchaId, captchaAnswer)
-                                if (success && data != null) onSuccess(data) else error = "Restore failed: " + data?.getValue("error")
+                                if (success && data != null) onSuccess(data) else error = "Restore failed: " + (data as? kotlinx.serialization.json.JsonObject)?.get("error")?.jsonPrimitive?.content
                                 val (newId, newBmp) = fetchCaptcha()
                                 captchaId = newId
                                 captchaBitmap = newBmp

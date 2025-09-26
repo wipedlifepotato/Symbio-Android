@@ -18,13 +18,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonPrimitive
 import world.wipedlifepotato.symbioandroidapp.doLogin
 import world.wipedlifepotato.symbioandroidapp.fetchCaptcha
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(navController: NavHostController, onSuccess: (JsonObject) -> Unit) {
+fun LoginScreen(navController: NavHostController, onSuccess: (JsonElement) -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var captchaBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
@@ -110,7 +111,7 @@ fun LoginScreen(navController: NavHostController, onSuccess: (JsonObject) -> Uni
                         onClick = {
                             scope.launch {
                                 val (success, data) = doLogin(username, password, captchaId, captchaAnswer)
-                                if (success && data != null) onSuccess(data) else error = "Login failed: " + data?.getValue("error")
+                                if (success && data != null) onSuccess(data) else error = "Login failed: " + (data as? kotlinx.serialization.json.JsonObject)?.get("error")?.jsonPrimitive?.content
                                 val (newId, newBmp) = fetchCaptcha()
                                 captchaId = newId
                                 captchaBitmap = newBmp

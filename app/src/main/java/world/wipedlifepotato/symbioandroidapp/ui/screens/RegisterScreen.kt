@@ -24,7 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonPrimitive
 import world.wipedlifepotato.symbioandroidapp.fetchCaptcha
 import world.wipedlifepotato.symbioandroidapp.networkRequest
@@ -34,7 +34,7 @@ suspend fun doRegister(
     password: String,
     captchaId: String,
     captchaAnswer: String
-): Pair<Boolean, kotlinx.serialization.json.JsonObject?> =
+): Pair<Boolean, JsonElement?> =
     networkRequest("/register", mapOf(
         "username" to username,
         "password" to password,
@@ -46,7 +46,7 @@ suspend fun doRegister(
 @Composable
 fun RegisterScreen(
     navController: NavController,
-    onRegisterSuccess: (JsonObject) -> Unit
+    onRegisterSuccess: (JsonElement) -> Unit
 ) {
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -160,11 +160,13 @@ fun RegisterScreen(
                                 coroutineScope.launch {
                                     val (success, data) = doRegister(login, password, captchaId, captchaAnswer)
                                     if (success && data != null) {
-                                        serverMessage = data["message"]?.jsonPrimitive?.content
-                                        mnemonic = data["encrypted"]?.jsonPrimitive?.content
+                                        val jsonObj = data as? kotlinx.serialization.json.JsonObject
+                                        serverMessage = jsonObj?.get("message")?.jsonPrimitive?.content
+                                        mnemonic = jsonObj?.get("encrypted")?.jsonPrimitive?.content
                                         onRegisterSuccess(data)
                                     } else {
-                                        serverMessage = data?.get("message")?.jsonPrimitive?.content ?: "Unknown error"
+                                        val jsonObj = data as? kotlinx.serialization.json.JsonObject
+                                        serverMessage = jsonObj?.get("message")?.jsonPrimitive?.content ?: "Unknown error"
                                         val (newId, newBmp) = fetchCaptcha()
                                         captchaId = newId
                                         captchaBitmap = newBmp
