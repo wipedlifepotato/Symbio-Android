@@ -1,8 +1,20 @@
 package world.wipedlifepotato.symbioandroidapp
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -10,8 +22,24 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Wallet
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -19,31 +47,32 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import android.widget.Toast
-import androidx.compose.foundation.horizontalScroll
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FreelanceMenu(navController: NavController) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         Text(
             text = "Freelance System",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
         )
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(32.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
         ) {
             MenuColumn(navController, listOf("Tasks" to "Tasks", "Tickets" to "Tickets"))
             MenuColumn(navController, listOf("Disputes" to "Disputes", "Chats" to "Chats"))
@@ -51,23 +80,29 @@ fun FreelanceMenu(navController: NavController) {
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MenuColumn(navController: NavController, items: List<Pair<String, String>>) {
+fun MenuColumn(
+    navController: NavController,
+    items: List<Pair<String, String>>,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         items.forEach { (label, route) ->
             Button(
                 onClick = { navController.navigate(route) },
-                modifier = Modifier
-                    .width(140.dp)
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.medium // красивые скругления
+                modifier =
+                    Modifier
+                        .width(140.dp)
+                        .height(56.dp),
+                shape = MaterialTheme.shapes.medium, // красивые скругления
             ) {
                 Text(text = label, style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -77,7 +112,7 @@ fun DashboardScreen(
     loading: Boolean,
     errorMessage: String,
     token: String,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
@@ -98,17 +133,18 @@ fun DashboardScreen(
                     IconButton(onClick = onLogout) {
                         Icon(Icons.Filled.Logout, contentDescription = "Logout")
                     }
-                }
+                },
             )
-        }
+        },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-                .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp)
+                    .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (loading) {
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -117,12 +153,12 @@ fun DashboardScreen(
             } else if (errorMessage.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                 ) {
                     Text(
                         "Error: $errorMessage",
                         color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(16.dp),
                     )
                 }
             } else {
@@ -131,20 +167,20 @@ fun DashboardScreen(
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 Icons.Filled.AccountCircle,
                                 contentDescription = "Profile",
                                 modifier = Modifier.size(48.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
                                     "Welcome, ${it["username"]?.jsonPrimitive?.content ?: "User"}",
                                     style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
                                 )
                             }
                         }
@@ -160,27 +196,38 @@ fun DashboardScreen(
                                     Icons.Filled.Wallet,
                                     contentDescription = "Wallet",
                                     modifier = Modifier.size(32.dp),
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = MaterialTheme.colorScheme.primary,
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     "Bitcoin Wallet",
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
                                 )
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             val address = it["address"]?.jsonPrimitive?.content ?: "N/A"
                             Text(
                                 "Address: $address",
-                                modifier = Modifier.clickable {
-                                    if (address != "N/A" && address.isNotEmpty()) {
-                                        clipboardManager.setText(AnnotatedString(address))
-                                        Toast.makeText(context, "Address copied", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, "No address available", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
+                                modifier =
+                                    Modifier.clickable {
+                                        if (address != "N/A" && address.isNotEmpty()) {
+                                            clipboardManager.setText(AnnotatedString(address))
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "Address copied",
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
+                                        } else {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    "No address available",
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
+                                        }
+                                    },
                             )
                             Text("Balance: ${it["balance"]?.jsonPrimitive?.content ?: "0"} BTC")
                         }
@@ -195,13 +242,13 @@ fun DashboardScreen(
                                 Icons.Filled.Send,
                                 contentDescription = "Send",
                                 modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 "Send Bitcoin",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -209,14 +256,14 @@ fun DashboardScreen(
                             value = recipient,
                             onValueChange = { recipient = it },
                             label = { Text("Recipient Address") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = amount,
                             onValueChange = { amount = it },
                             label = { Text("Amount (BTC)") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
@@ -226,7 +273,12 @@ fun DashboardScreen(
                                         sendLoading = true
                                         sendError = null
                                         sendSuccess = null
-                                        val (success, response) = sendBitcoin(recipient, amount, token)
+                                        val (success, response) =
+                                            sendBitcoin(
+                                                recipient,
+                                                amount,
+                                                token,
+                                            )
                                         sendLoading = false
                                         if (success) {
                                             sendSuccess = "Transaction sent successfully!"
@@ -234,17 +286,21 @@ fun DashboardScreen(
                                             amount = ""
                                         } else {
                                             Log.d("ErrorToSend", response.toString())
-                                            sendError = when (response) {
-                                                is JsonObject -> response["error"]?.jsonPrimitive?.content ?: "Send failed"
-                                                is String -> response
-                                                else -> "Send failed"
-                                            }
+                                            sendError =
+                                                when (response) {
+                                                    is JsonObject ->
+                                                        response["error"]?.jsonPrimitive?.content
+                                                            ?: "Send failed"
+
+                                                    is String -> response
+                                                    else -> "Send failed"
+                                                }
                                         }
                                     }
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = !sendLoading && recipient.isNotBlank() && amount.isNotBlank()
+                            enabled = !sendLoading && recipient.isNotBlank() && amount.isNotBlank(),
                         ) {
                             if (sendLoading) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp))

@@ -1,10 +1,26 @@
 package world.wipedlifepotato.symbioandroidapp.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -19,7 +35,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import world.wipedlifepotato.symbioandroidapp.networkRequest
 
 @Composable
-fun ProfilesScreen(navController: NavHostController, token: String) {
+fun ProfilesScreen(
+    navController: NavHostController,
+    token: String,
+) {
     val coroutineScope = rememberCoroutineScope()
     var profiles by remember { mutableStateOf<List<JsonObject>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
@@ -31,8 +50,18 @@ fun ProfilesScreen(navController: NavHostController, token: String) {
     fun loadProfiles() {
         coroutineScope.launch {
             loading = true
-            val (success, data) = networkRequest("/profiles?limit=$limit&offset=$offset", emptyMap(), token, "GET")
-            if (success && data != null && data is kotlinx.serialization.json.JsonObject && data.containsKey("profiles") && data["profiles"] !is JsonNull) {
+            val (success, data) =
+                networkRequest(
+                    "/profiles?limit=$limit&offset=$offset",
+                    emptyMap(),
+                    token,
+                    "GET",
+                )
+            if (success && data != null && data is JsonObject &&
+                data.containsKey(
+                    "profiles",
+                ) && data["profiles"] !is JsonNull
+            ) {
                 val newProfiles = data["profiles"]?.jsonArray?.map { it.jsonObject } ?: emptyList()
                 profiles = if (offset == 0) newProfiles else profiles + newProfiles
                 total = data["total"]?.jsonPrimitive?.int ?: 0
@@ -47,7 +76,12 @@ fun ProfilesScreen(navController: NavHostController, token: String) {
         loadProfiles()
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+    ) {
         Text("Profiles", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -83,16 +117,34 @@ fun ProfilesScreen(navController: NavHostController, token: String) {
 }
 
 @Composable
-fun ProfileItem(profile: JsonObject, token: String, coroutineScope: kotlinx.coroutines.CoroutineScope, onMessage: (String) -> Unit) {
+fun ProfileItem(
+    profile: JsonObject,
+    token: String,
+    coroutineScope: kotlinx.coroutines.CoroutineScope,
+    onMessage: (String) -> Unit,
+) {
     val userId = profile["user_id"]?.jsonPrimitive?.int ?: 0
-    Card(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+    Card(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(profile["username"]?.jsonPrimitive?.content ?: "Unknown", style = MaterialTheme.typography.titleMedium)
+            Text(
+                profile["username"]?.jsonPrimitive?.content ?: "Unknown",
+                style = MaterialTheme.typography.titleMedium,
+            )
             Text(profile["full_name"]?.jsonPrimitive?.content ?: "")
             Text(profile["bio"]?.jsonPrimitive?.content ?: "")
             Button(onClick = {
                 coroutineScope.launch {
-                    val (success, _) = networkRequest("/api/chat/createChatRequest?requested_id=$userId", emptyMap(), token)
+                    val (success, _) =
+                        networkRequest(
+                            "/api/chat/createChatRequest?requested_id=$userId",
+                            emptyMap(),
+                            token,
+                        )
                     onMessage(if (success) "Chat request sent" else "Failed to send request")
                 }
             }) {
