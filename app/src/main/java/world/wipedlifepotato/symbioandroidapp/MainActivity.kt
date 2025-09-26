@@ -160,6 +160,14 @@ class MainActivity : ComponentActivity() {
                             composable("Tasks") {
                                 TaskScreen(navController=navController, token=token)
                             }
+                            composable("task_details/{taskId}") { backStackEntry ->
+                                val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                                TaskDetailsScreen(navController=navController, taskId=taskId, token=token)
+                            }
+                            composable("freelancer_reviews/{userId}") { backStackEntry ->
+                                val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                                FreelancerReviewsScreen(navController=navController, userId=userId, token=token)
+                            }
                             composable("Profile") {
                                 ProfileScreen(navController=navController, token=token)
                             }

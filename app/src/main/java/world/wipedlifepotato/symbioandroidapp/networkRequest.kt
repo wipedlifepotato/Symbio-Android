@@ -120,7 +120,13 @@ suspend fun networkRequest(
             Log.d("RequestBody_", body ?: "----")
             Log.d("RequestBody", response.toString())
 
-            val jsonResponse = if (!body.isNullOrEmpty()) Json.parseToJsonElement(body) else null
+            val jsonResponse = if (!body.isNullOrEmpty()) {
+                try {
+                    Json.parseToJsonElement(body)
+                } catch (e: Exception) {
+                    JsonPrimitive(body)
+                }
+            } else null
             val success = response.isSuccessful
 
             return@withContext success to jsonResponse

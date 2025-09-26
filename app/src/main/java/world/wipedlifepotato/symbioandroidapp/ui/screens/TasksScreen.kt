@@ -1,5 +1,6 @@
 package world.wipedlifepotato.symbioandroidapp.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,12 +37,21 @@ fun TaskScreen(navController: NavHostController, token: String) {
         val endpoint = "/api/tasks" + if (query.isNotEmpty()) "?" + query.entries.joinToString("&") { "${it.key}=${it.value}" } else ""
 
         val (success, data) = networkRequest(endpoint, emptyMap(), token, "GET")
-        if (success && data != null && data is kotlinx.serialization.json.JsonObject && data.containsKey("tasks") && data["tasks"] !is JsonNull) {
-            val tasksArray = data["tasks"]?.jsonArray
-            tasks = tasksArray?.map { it.jsonObject } ?: emptyList()
-            hasNext = tasks.size >= 20
+        Log.d("GetTask", success.toString())
+        Log.d("GetTask", data.toString())
+
+        if (success && data != null && data is kotlinx.serialization.json.JsonObject && data.containsKey("tasks")) {
+            val tasksJson = data["tasks"]
+            if (tasksJson is kotlinx.serialization.json.JsonArray) {
+                tasks = tasksJson.map { it.jsonObject }
+                hasNext = tasks.size >= 20
+            } else {
+                // tasks is null or not an array, treat as empty
+                tasks = emptyList()
+                hasNext = false
+            }
         } else {
-            errorMessage = "Failed to load tasks"
+            errorMessage = "Failed to load tasks: " + data.toString()
         }
         loading = false
     }
@@ -52,7 +62,7 @@ fun TaskScreen(navController: NavHostController, token: String) {
 
         // Status filter
         Row {
-            listOf("all", "open", "in_progress", "completed").forEach { s ->
+            listOf("all", "open", "pending", "completed").forEach { s ->
                 FilterChip(
                     selected = status == s,
                     onClick = { status = s; page = 1 },
@@ -100,7 +110,10 @@ fun TaskItem(task: JsonObject, navController: NavHostController) {
             Text(task["description"]?.jsonPrimitive?.content ?: "No description")
             Text("Status: ${task["status"]?.jsonPrimitive?.content ?: "Unknown"}")
             Text("Budget: ${task["budget"]?.jsonPrimitive?.content ?: "0"} ${task["currency"]?.jsonPrimitive?.content ?: "BTC"}")
-            Button(onClick = { /* Navigate to task details */ }) {
+            Button(onClick = {
+                val taskId = task["id"]?.jsonPrimitive?.content ?: ""
+                navController.navigate("task_details/$taskId")
+            }) {
                 Text("View Details")
             }
         }
