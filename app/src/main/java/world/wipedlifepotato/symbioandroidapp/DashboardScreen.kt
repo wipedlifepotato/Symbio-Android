@@ -1,5 +1,7 @@
 package world.wipedlifepotato.symbioandroidapp
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,8 +14,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.widget.Toast
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
@@ -33,6 +39,8 @@ fun DashboardScreen(
 ) {
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
 
     var recipient by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
@@ -120,7 +128,18 @@ fun DashboardScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Address: ${it["address"]?.jsonPrimitive?.content ?: "N/A"}")
+                            val address = it["address"]?.jsonPrimitive?.content ?: "N/A"
+                            Text(
+                                "Address: $address",
+                                modifier = Modifier.clickable {
+                                    if (address != "N/A" && address.isNotEmpty()) {
+                                        clipboardManager.setText(AnnotatedString(address))
+                                        Toast.makeText(context, "Address copied", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "No address available", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            )
                             Text("Balance: ${it["balance"]?.jsonPrimitive?.content ?: "0"} BTC")
                         }
                     }
@@ -172,7 +191,12 @@ fun DashboardScreen(
                                             recipient = ""
                                             amount = ""
                                         } else {
-                                            sendError = response?.get("error")?.jsonPrimitive?.content ?: "Send failed"
+                                            Log.d("ErrorToSend", response.toString())
+                                            sendError = when (response) {
+                                                is JsonObject -> response["error"]?.jsonPrimitive?.content ?: "Send failed"
+                                                is String -> response
+                                                else -> "Send failed"
+                                            }
                                         }
                                     }
                                 }

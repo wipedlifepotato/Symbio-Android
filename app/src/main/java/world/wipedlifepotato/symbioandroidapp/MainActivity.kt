@@ -53,6 +53,11 @@ class MainActivity : ComponentActivity() {
                 var errorMessage by remember { mutableStateOf("") }
                 var initializing by remember { mutableStateOf(true) } // флаг инициализации
 
+                LaunchedEffect(Unit) {
+                    val loadedToken = loadToken()
+                    token = loadedToken
+                }
+
                 LaunchedEffect(token) {
                     if (token.isNotEmpty()) {
                         loading = true

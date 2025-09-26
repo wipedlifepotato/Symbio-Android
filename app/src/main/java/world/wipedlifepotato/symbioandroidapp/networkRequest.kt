@@ -90,7 +90,7 @@ suspend fun sendBitcoin(
     to: String,
     amount: String,
     token: String
-): Pair<Boolean, JsonObject?> = withContext(Dispatchers.IO) {
+): Pair<Boolean, Any?> = withContext(Dispatchers.IO) {
     val proxy = Proxy(Proxy.Type.HTTP, java.net.InetSocketAddress("localhost", 4444))
     val client = OkHttpClient.Builder().proxy(proxy).build()
 
@@ -108,10 +108,16 @@ suspend fun sendBitcoin(
             val body = response.body?.string()
             Log.d("SendBitcoinResponse", body ?: "----")
 
-            val jsonResponse = if (!body.isNullOrEmpty()) Json.parseToJsonElement(body).jsonObject else null
             val success = response.isSuccessful
+            val responseData: Any? = if (!body.isNullOrEmpty()) {
+                try {
+                    Json.parseToJsonElement(body).jsonObject
+                } catch (e: Exception) {
+                    body
+                }
+            } else null
 
-            return@withContext success to jsonResponse
+            return@withContext success to responseData
         }
     } catch (e: Exception) {
         e.printStackTrace()
