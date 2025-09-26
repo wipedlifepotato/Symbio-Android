@@ -53,8 +53,7 @@ class MainActivity : ComponentActivity() {
                 var errorMessage by remember { mutableStateOf("") }
                 var initializing by remember { mutableStateOf(true) } // флаг инициализации
 
-                LaunchedEffect(Unit) {
-                    token = loadToken()
+                LaunchedEffect(token) {
                     if (token.isNotEmpty()) {
                         loading = true
                         try {
@@ -151,10 +150,19 @@ class MainActivity : ComponentActivity() {
                             } }
                             composable("dashboard") {
                                 DashboardScreen(
+                                    navController = navController,
                                     profile = userProfile,
                                     wallet = wallet,
                                     loading = loading,
-                                    errorMessage = errorMessage
+                                    errorMessage = errorMessage,
+                                    token = token,
+                                    onLogout = {
+                                        token = ""
+                                        coroutineScope.launch { saveToken("") }
+                                        navController.navigate("home") {
+                                            popUpTo("home") { inclusive = true }
+                                        }
+                                    }
                                 )
                             }
                         }

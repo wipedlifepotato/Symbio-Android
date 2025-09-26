@@ -86,4 +86,54 @@ suspend fun networkRequest(
     }
 }
 
+suspend fun sendBitcoin(
+    to: String,
+    amount: String,
+    token: String
+): Pair<Boolean, JsonObject?> = withContext(Dispatchers.IO) {
+    val proxy = Proxy(Proxy.Type.HTTP, java.net.InetSocketAddress("localhost", 4444))
+    val client = OkHttpClient.Builder().proxy(proxy).build()
+
+    val url = "$BASE_URL/api/wallet/bitcoinSend?to=$to&amount=$amount"
+    Log.d("SendBitcoinURL", url)
+
+    val request = Request.Builder()
+        .url(url)
+        .post(RequestBody.create("application/json".toMediaTypeOrNull(), "{}")) // Empty body
+        .addHeader("Authorization", "Bearer $token")
+        .build()
+
+    try {
+        client.newCall(request).execute().use { response ->
+            val body = response.body?.string()
+            Log.d("SendBitcoinResponse", body ?: "----")
+
+            val jsonResponse = if (!body.isNullOrEmpty()) Json.parseToJsonElement(body).jsonObject else null
+            val success = response.isSuccessful
+
+            return@withContext success to jsonResponse
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+        return@withContext false to null
+    }
+}
+
+suspend fun doLogin(username: String, password: String, captchaId: String, captchaAnswer: String): Pair<Boolean, JsonObject?> =
+    networkRequest("/auth", mapOf(
+        "username" to username,
+        "password" to password,
+        "captcha_id" to captchaId,
+        "captcha_answer" to captchaAnswer
+    ))
+
+suspend fun doRestore(username: String, mnemonic: String, newPassword: String, captchaId: String, captchaAnswer: String): Pair<Boolean, JsonObject?> =
+    networkRequest("/restoreuser", mapOf(
+        "username" to username,
+        "mnemonic" to mnemonic,
+        "new_password" to newPassword,
+        "captcha_id" to captchaId,
+        "captcha_answer" to captchaAnswer
+    ))
+
 

@@ -1,0 +1,142 @@
+package world.wipedlifepotato.symbioandroidapp.ui.screens
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import world.wipedlifepotato.symbioandroidapp.doRestore
+import world.wipedlifepotato.symbioandroidapp.fetchCaptcha
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RestoreScreen(navController: NavHostController, onSuccess: (JsonObject) -> Unit) {
+    var username by remember { mutableStateOf("") }
+    var mnemonic by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var captchaBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var captchaId by remember { mutableStateOf("") }
+    var captchaAnswer by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        val (id, bmp) = fetchCaptcha()
+        captchaId = id
+        captchaBitmap = bmp
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Restore Account", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Restore Your Account",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        label = { Text("Username") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = mnemonic,
+                        onValueChange = { mnemonic = it },
+                        label = { Text("Mnemonic Phrase") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = newPassword,
+                        onValueChange = { newPassword = it },
+                        label = { Text("New Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    captchaBitmap?.let {
+                        Image(
+                            bitmap = it.asImageBitmap(),
+                            contentDescription = "Captcha",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    OutlinedTextField(
+                        value = captchaAnswer,
+                        onValueChange = { captchaAnswer = it },
+                        label = { Text("Captcha") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val (success, data) = doRestore(username, mnemonic, newPassword, captchaId, captchaAnswer)
+                                if (success && data != null) onSuccess(data) else error = "Restore failed: " + data?.getValue("error")
+                                val (newId, newBmp) = fetchCaptcha()
+                                captchaId = newId
+                                captchaBitmap = newBmp
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = username.isNotEmpty() && mnemonic.isNotEmpty() && newPassword.isNotEmpty()
+                    ) {
+                        Text("Restore Account")
+                    }
+                    error?.let {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(it, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        }
+    }
+}

@@ -3,31 +3,31 @@ package world.wipedlifepotato.symbioandroidapp.ui.screens
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
-import world.wipedlifepotato.symbioandroidapp.fetchCaptcha
-import world.wipedlifepotato.symbioandroidapp.networkRequest
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import world.wipedlifepotato.symbioandroidapp.fetchCaptcha
+import world.wipedlifepotato.symbioandroidapp.networkRequest
 
 suspend fun doRegister(
     username: String,
@@ -42,6 +42,7 @@ suspend fun doRegister(
         "captcha_answer" to captchaAnswer
     ))
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navController: NavController,
@@ -61,123 +62,159 @@ fun RegisterScreen(
     val coroutineScope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
 
-    // Загрузка капчи при старте
     LaunchedEffect(Unit) {
         val (id, bmp) = fetchCaptcha()
         captchaId = id
         captchaBitmap = bmp
     }
 
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-
-        if (isWrongPassword) {
-            Text("WRONG REPEAT PASSWORD", color = Color.Red)
-        }
-
-        TextField(
-            value = login,
-            onValueChange = { login = it },
-            label = { Text("Login") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        TextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        TextField(
-            value = repeatPassword,
-            onValueChange = {
-                repeatPassword = it
-                isWrongPassword = repeatPassword != password
-            },
-            label = { Text("Repeat Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Капча
-        captchaBitmap?.let {
-            Image(
-                bitmap = it.asImageBitmap(),
-                contentDescription = "Captcha",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp),
-                contentScale = ContentScale.Fit
-            )
-        }
-
-        TextField(
-            value = captchaAnswer,
-            onValueChange = { captchaAnswer = it },
-            label = { Text("Captcha Answer") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(
-            onClick = {
-                if (!isWrongPassword) {
-                    coroutineScope.launch {
-                        val (success, data) = doRegister(login, password, captchaId, captchaAnswer)
-                        if (success && data != null) {
-                            serverMessage = data["message"]?.jsonPrimitive?.content
-                            mnemonic = data["encrypted"]?.jsonPrimitive?.content
-                            onRegisterSuccess(data)
-                        } else {
-                            serverMessage = data?.get("message")?.jsonPrimitive?.content ?: "Unknown error"
-                            val (newId, newBmp) = fetchCaptcha()
-                            captchaId = newId
-                            captchaBitmap = newBmp
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Register", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
-            },
-            enabled = !isWrongPassword
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(32.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Register")
-        }
+            Text(
+                text = "Create Account",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (isWrongPassword) {
+                        Text("Passwords do not match", color = MaterialTheme.colorScheme.error)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
 
-        serverMessage?.let { msg ->
-            Text(msg, color = if (mnemonic != null) Color.Green else Color.Red)
-        }
+                    OutlinedTextField(
+                        value = login,
+                        onValueChange = { login = it },
+                        label = { Text("Username") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = repeatPassword,
+                        onValueChange = {
+                            repeatPassword = it
+                            isWrongPassword = repeatPassword != password && repeatPassword.isNotEmpty()
+                        },
+                        label = { Text("Repeat Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-        mnemonic?.let { phrase ->
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("Mnemonic: $phrase")
-            Button(onClick = {
-                clipboardManager.setText(AnnotatedString(phrase))
-            }) {
-                Text("Copy to clipboard")
-            }
-        }
+                    // Капча
+                    captchaBitmap?.let {
+                        Image(
+                            bitmap = it.asImageBitmap(),
+                            contentDescription = "Captcha",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    OutlinedTextField(
+                        value = captchaAnswer,
+                        onValueChange = { captchaAnswer = it },
+                        label = { Text("Captcha Answer") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            if (!isWrongPassword && password.isNotEmpty()) {
+                                coroutineScope.launch {
+                                    val (success, data) = doRegister(login, password, captchaId, captchaAnswer)
+                                    if (success && data != null) {
+                                        serverMessage = data["message"]?.jsonPrimitive?.content
+                                        mnemonic = data["encrypted"]?.jsonPrimitive?.content
+                                        onRegisterSuccess(data)
+                                    } else {
+                                        serverMessage = data?.get("message")?.jsonPrimitive?.content ?: "Unknown error"
+                                        val (newId, newBmp) = fetchCaptcha()
+                                        captchaId = newId
+                                        captchaBitmap = newBmp
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isWrongPassword && password.isNotEmpty() && login.isNotEmpty()
+                    ) {
+                        Text("Register")
+                    }
 
-        Button(
-            onClick = {
-                coroutineScope.launch {
-                    val (newId, newBmp) = fetchCaptcha()
-                    captchaId = newId
-                    captchaBitmap = newBmp
+                    serverMessage?.let { msg ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(msg, color = if (mnemonic != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+                    }
+
+                    mnemonic?.let { phrase ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Mnemonic Phrase:")
+                        SelectionContainer {
+                            Text(phrase, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(phrase))
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Copy to Clipboard")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                val (newId, newBmp) = fetchCaptcha()
+                                captchaId = newId
+                                captchaBitmap = newBmp
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Refresh Captcha")
+                    }
                 }
             }
-        ) {
-            Text("Refresh Captcha")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(onClick = { navController.popBackStack() }) {
-            Text("Back")
         }
     }
 }
