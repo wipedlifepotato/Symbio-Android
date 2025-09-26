@@ -1,0 +1,73 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Local configuration
+local.properties
+.gradle/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# IntelliJ/Android Studio project files
+*.iml
+.idea/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Android Studio captures folder
+captures/
+
+# Gradle Wrapper
+gradle-app.setting
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Other
+*.apk
+*.ap_
+*.aab
+
+# NDK / CMake
+.obj/
+.externalNativeBuild/
+.cxx/
+
+# Generated files
+*.class
+bin/
+gen/
+out/
+
+# Kotlin specific
+*.kotlin_module
+
+# Misc
+*.hprof
+
