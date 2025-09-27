@@ -1,19 +1,40 @@
 package world.wipedlifepotato.symbioandroidapp.ui.screens
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -33,20 +54,23 @@ suspend fun doRegister(
     username: String,
     password: String,
     captchaId: String,
-    captchaAnswer: String
+    captchaAnswer: String,
 ): Pair<Boolean, JsonElement?> =
-    networkRequest("/register", mapOf(
-        "username" to username,
-        "password" to password,
-        "captcha_id" to captchaId,
-        "captcha_answer" to captchaAnswer
-    ))
+    networkRequest(
+        "/register",
+        mapOf(
+            "username" to username,
+            "password" to password,
+            "captcha_id" to captchaId,
+            "captcha_answer" to captchaAnswer,
+        ),
+    )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navController: NavController,
-    onRegisterSuccess: (JsonElement) -> Unit
+    onRegisterSuccess: (JsonElement) -> Unit,
 ) {
     var login by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -76,30 +100,31 @@ fun RegisterScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
             )
-        }
+        },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(32.dp)
-                .verticalScroll(rememberScrollState()),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(32.dp)
+                    .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = "Create Account",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier.padding(bottom = 32.dp),
             )
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     if (isWrongPassword) {
@@ -111,7 +136,7 @@ fun RegisterScreen(
                         value = login,
                         onValueChange = { login = it },
                         label = { Text("Username") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -119,18 +144,19 @@ fun RegisterScreen(
                         onValueChange = { password = it },
                         label = { Text("Password") },
                         visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = repeatPassword,
                         onValueChange = {
                             repeatPassword = it
-                            isWrongPassword = repeatPassword != password && repeatPassword.isNotEmpty()
+                            isWrongPassword =
+                                repeatPassword != password && repeatPassword.isNotEmpty()
                         },
                         label = { Text("Repeat Password") },
                         visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -139,10 +165,11 @@ fun RegisterScreen(
                         Image(
                             bitmap = it.asImageBitmap(),
                             contentDescription = "Captcha",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp),
-                            contentScale = ContentScale.Fit
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                            contentScale = ContentScale.Fit,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -150,7 +177,7 @@ fun RegisterScreen(
                         value = captchaAnswer,
                         onValueChange = { captchaAnswer = it },
                         label = { Text("Captcha Answer") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -158,15 +185,24 @@ fun RegisterScreen(
                         onClick = {
                             if (!isWrongPassword && password.isNotEmpty()) {
                                 coroutineScope.launch {
-                                    val (success, data) = doRegister(login, password, captchaId, captchaAnswer)
+                                    val (success, data) =
+                                        doRegister(
+                                            login,
+                                            password,
+                                            captchaId,
+                                            captchaAnswer,
+                                        )
                                     if (success && data != null) {
                                         val jsonObj = data as? kotlinx.serialization.json.JsonObject
-                                        serverMessage = jsonObj?.get("message")?.jsonPrimitive?.content
+                                        serverMessage =
+                                            jsonObj?.get("message")?.jsonPrimitive?.content
                                         mnemonic = jsonObj?.get("encrypted")?.jsonPrimitive?.content
                                         onRegisterSuccess(data)
                                     } else {
                                         val jsonObj = data as? kotlinx.serialization.json.JsonObject
-                                        serverMessage = jsonObj?.get("message")?.jsonPrimitive?.content ?: "Unknown error"
+                                        serverMessage =
+                                            jsonObj?.get("message")?.jsonPrimitive?.content
+                                                ?: "Unknown error"
                                         val (newId, newBmp) = fetchCaptcha()
                                         captchaId = newId
                                         captchaBitmap = newBmp
@@ -175,14 +211,17 @@ fun RegisterScreen(
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !isWrongPassword && password.isNotEmpty() && login.isNotEmpty()
+                        enabled = !isWrongPassword && password.isNotEmpty() && login.isNotEmpty(),
                     ) {
                         Text("Register")
                     }
 
                     serverMessage?.let { msg ->
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(msg, color = if (mnemonic != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+                        Text(
+                            msg,
+                            color = if (mnemonic != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        )
                     }
 
                     mnemonic?.let { phrase ->
@@ -196,7 +235,7 @@ fun RegisterScreen(
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(phrase))
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text("Copy to Clipboard")
                         }
@@ -211,7 +250,7 @@ fun RegisterScreen(
                                 captchaBitmap = newBmp
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text("Refresh Captcha")
                     }
@@ -220,6 +259,3 @@ fun RegisterScreen(
         }
     }
 }
-
-
-

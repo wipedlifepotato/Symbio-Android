@@ -1,12 +1,34 @@
 package world.wipedlifepotato.symbioandroidapp.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
@@ -25,7 +47,10 @@ import world.wipedlifepotato.symbioandroidapp.fetchCaptcha
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RestoreScreen(navController: NavHostController, onSuccess: (JsonElement) -> Unit) {
+fun RestoreScreen(
+    navController: NavHostController,
+    onSuccess: (JsonElement) -> Unit,
+) {
     var username by remember { mutableStateOf("") }
     var mnemonic by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -49,43 +74,44 @@ fun RestoreScreen(navController: NavHostController, onSuccess: (JsonElement) -> 
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
             )
-        }
+        },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(32.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(32.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = "Restore Your Account",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 32.dp)
+                modifier = Modifier.padding(bottom = 32.dp),
             )
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     OutlinedTextField(
                         value = username,
                         onValueChange = { username = it },
                         label = { Text("Username") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = mnemonic,
                         onValueChange = { mnemonic = it },
                         label = { Text("Mnemonic Phrase") },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -93,7 +119,7 @@ fun RestoreScreen(navController: NavHostController, onSuccess: (JsonElement) -> 
                         onValueChange = { newPassword = it },
                         label = { Text("New Password") },
                         visualTransformation = PasswordVisualTransformation(),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -101,10 +127,11 @@ fun RestoreScreen(navController: NavHostController, onSuccess: (JsonElement) -> 
                         Image(
                             bitmap = it.asImageBitmap(),
                             contentDescription = "Captcha",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(80.dp),
-                            contentScale = ContentScale.Fit
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(80.dp),
+                            contentScale = ContentScale.Fit,
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -113,22 +140,39 @@ fun RestoreScreen(navController: NavHostController, onSuccess: (JsonElement) -> 
                         onValueChange = { captchaAnswer = it },
                         label = { Text("Captcha") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         onClick = {
                             scope.launch {
-                                val (success, data) = doRestore(username, mnemonic, newPassword, captchaId, captchaAnswer)
-                                if (success && data != null) onSuccess(data) else error = "Restore failed: " + (data as? kotlinx.serialization.json.JsonObject)?.get("error")?.jsonPrimitive?.content
+                                val (success, data) =
+                                    doRestore(
+                                        username,
+                                        mnemonic,
+                                        newPassword,
+                                        captchaId,
+                                        captchaAnswer,
+                                    )
+                                if (success && data != null) {
+                                    onSuccess(data)
+                                } else {
+                                    error =
+                                        "Restore failed: " +
+                                        (data as? kotlinx.serialization.json.JsonObject)
+                                            ?.get(
+                                                "error",
+                                            )?.jsonPrimitive
+                                            ?.content
+                                }
                                 val (newId, newBmp) = fetchCaptcha()
                                 captchaId = newId
                                 captchaBitmap = newBmp
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = username.isNotEmpty() && mnemonic.isNotEmpty() && newPassword.isNotEmpty()
+                        enabled = username.isNotEmpty() && mnemonic.isNotEmpty() && newPassword.isNotEmpty(),
                     ) {
                         Text("Restore Account")
                     }

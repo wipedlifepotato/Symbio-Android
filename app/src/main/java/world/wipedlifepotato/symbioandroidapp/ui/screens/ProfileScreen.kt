@@ -1,8 +1,24 @@
 package world.wipedlifepotato.symbioandroidapp.ui.screens
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -15,7 +31,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import world.wipedlifepotato.symbioandroidapp.networkRequest
 
 @Composable
-fun ProfileScreen(navController: NavHostController, token: String) {
+fun ProfileScreen(
+    navController: NavHostController,
+    token: String,
+) {
     val coroutineScope = rememberCoroutineScope()
     var profile by remember { mutableStateOf<JsonObject?>(null) }
     var username by remember { mutableStateOf("") }
@@ -29,13 +48,17 @@ fun ProfileScreen(navController: NavHostController, token: String) {
     LaunchedEffect(Unit) {
         loading = true
         val (success, data) = networkRequest("/profile", emptyMap(), token, "GET")
-        if (success && data != null && data is kotlinx.serialization.json.JsonObject) {
+        if (success && data != null && data is JsonObject) {
             username = data["username"]?.jsonPrimitive?.content ?: ""
             profile = data["profile"]?.jsonObject
             profile?.let {
                 fullName = it["full_name"]?.jsonPrimitive?.content ?: ""
                 bio = it["bio"]?.jsonPrimitive?.content ?: ""
-                skills = (it["skills"]?.jsonArray?.map { s -> s.jsonPrimitive.content } ?: emptyList()).joinToString(", ")
+                skills =
+                    (
+                        it["skills"]?.jsonArray?.map { s -> s.jsonPrimitive.content }
+                            ?: emptyList()
+                    ).joinToString(", ")
                 avatarBase64 = it["avatar"]?.jsonPrimitive?.content ?: ""
             }
         } else {
@@ -59,32 +82,33 @@ fun ProfileScreen(navController: NavHostController, token: String) {
                 value = fullName,
                 onValueChange = { fullName = it },
                 label = { Text("Full Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = bio,
                 onValueChange = { bio = it },
                 label = { Text("Bio") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = skills,
                 onValueChange = { skills = it },
                 label = { Text("Skills (comma separated)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = {
                 coroutineScope.launch {
                     val skillsArray = skills.split(",").map { it.trim() }
-                    val updateData = mapOf(
-                        "full_name" to fullName,
-                        "bio" to bio,
-                        "skills" to skillsArray,
-                        "avatar" to avatarBase64
-                    )
+                    val updateData =
+                        mapOf(
+                            "full_name" to fullName,
+                            "bio" to bio,
+                            "skills" to skillsArray,
+                            "avatar" to avatarBase64,
+                        )
                     val (success, _) = networkRequest("/profile", updateData, token)
                     if (success) {
                         errorMessage = "Profile updated successfully"
@@ -96,7 +120,18 @@ fun ProfileScreen(navController: NavHostController, token: String) {
                 Text("Update Profile")
             }
             if (errorMessage.isNotEmpty()) {
-                Text(errorMessage, color = if (errorMessage.contains("successfully")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+                Text(
+                    errorMessage,
+                    color =
+                        if (errorMessage.contains(
+                                "successfully",
+                            )
+                        ) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                )
             }
         }
 
