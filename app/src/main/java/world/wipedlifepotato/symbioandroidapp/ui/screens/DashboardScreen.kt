@@ -1,4 +1,4 @@
-package world.wipedlifepotato.symbioandroidapp
+package world.wipedlifepotato.symbioandroidapp.ui.screens
 
 import android.util.Log
 import android.widget.Toast
@@ -18,9 +18,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -52,6 +52,7 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import world.wipedlifepotato.symbioandroidapp.sendBitcoin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,7 +132,7 @@ fun DashboardScreen(
                 title = { Text("Dashboard", fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.Filled.Logout, contentDescription = "Logout")
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Logout")
                     }
                 },
             )
@@ -239,7 +240,7 @@ fun DashboardScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                Icons.Filled.Send,
+                                Icons.AutoMirrored.Filled.Send,
                                 contentDescription = "Send",
                                 modifier = Modifier.size(32.dp),
                                 tint = MaterialTheme.colorScheme.primary,

@@ -1,4 +1,4 @@
-package world.wipedlifepotato.symbioandroidapp
+package world.wipedlifepotato.symbioandroidapp.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

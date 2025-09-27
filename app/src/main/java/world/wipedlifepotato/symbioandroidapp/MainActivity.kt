@@ -30,7 +30,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 import world.wipedlifepotato.symbioandroidapp.ui.screens.ChatScreen
+import world.wipedlifepotato.symbioandroidapp.ui.screens.DashboardScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.DisputesScreen
+import world.wipedlifepotato.symbioandroidapp.ui.screens.HomeScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.LoginScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.ProfileScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.ProfilesScreen
