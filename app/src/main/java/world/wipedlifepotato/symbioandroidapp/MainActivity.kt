@@ -32,12 +32,14 @@ import kotlinx.serialization.json.jsonPrimitive
 import world.wipedlifepotato.symbioandroidapp.ui.screens.ChatScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.DashboardScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.DisputesScreen
+import world.wipedlifepotato.symbioandroidapp.ui.screens.FreelancerReviewsScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.HomeScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.LoginScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.ProfileScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.ProfilesScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.RegisterScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.RestoreScreen
+import world.wipedlifepotato.symbioandroidapp.ui.screens.TaskDetailsScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.TaskScreen
 import world.wipedlifepotato.symbioandroidapp.ui.screens.TicketScreen
 import world.wipedlifepotato.symbioandroidapp.ui.theme.SymbioAndroidAppTheme
@@ -201,6 +203,22 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("Tasks") {
                                 TaskScreen(navController = navController, token = token)
+                            }
+                            composable("task_details/{taskId}") { backStackEntry ->
+                                val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
+                                TaskDetailsScreen(
+                                    navController = navController,
+                                    taskId = taskId,
+                                    token = token,
+                                )
+                            }
+                            composable("freelancer_reviews/{userId}") { backStackEntry ->
+                                val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                                FreelancerReviewsScreen(
+                                    navController = navController,
+                                    userId = userId,
+                                    token = token,
+                                )
                             }
                             composable("Profile") {
                                 ProfileScreen(navController = navController, token = token)

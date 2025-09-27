@@ -1,5 +1,6 @@
 package world.wipedlifepotato.symbioandroidapp.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,9 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import world.wipedlifepotato.symbioandroidapp.networkRequest
@@ -58,16 +57,25 @@ fun TaskScreen(
             "/api/tasks" + if (query.isNotEmpty()) "?" + query.entries.joinToString("&") { "${it.key}=${it.value}" } else ""
 
         val (success, data) = networkRequest(endpoint, emptyMap(), token, "GET")
+        Log.d("GetTask", success.toString())
+        Log.d("GetTask", data.toString())
+
         if (success && data != null && data is JsonObject &&
             data.containsKey(
                 "tasks",
-            ) && data["tasks"] !is JsonNull
+            )
         ) {
-            val tasksArray = data["tasks"]?.jsonArray
-            tasks = tasksArray?.map { it.jsonObject } ?: emptyList()
-            hasNext = tasks.size >= 20
+            val tasksJson = data["tasks"]
+            if (tasksJson is kotlinx.serialization.json.JsonArray) {
+                tasks = tasksJson.map { it.jsonObject }
+                hasNext = tasks.size >= 20
+            } else {
+                // tasks is null or not an array, treat as empty
+                tasks = emptyList()
+                hasNext = false
+            }
         } else {
-            errorMessage = "Failed to load tasks"
+            errorMessage = "Failed to load tasks: " + data.toString()
         }
         loading = false
     }
@@ -83,7 +91,7 @@ fun TaskScreen(
 
         // Status filter
         Row {
-            listOf("all", "open", "in_progress", "completed").forEach { s ->
+            listOf("all", "open", "pending", "completed").forEach { s ->
                 FilterChip(
                     selected = status == s,
                     onClick = {
@@ -145,7 +153,10 @@ fun TaskItem(
             Text(task["description"]?.jsonPrimitive?.content ?: "No description")
             Text("Status: ${task["status"]?.jsonPrimitive?.content ?: "Unknown"}")
             Text("Budget: ${task["budget"]?.jsonPrimitive?.content ?: "0"} ${task["currency"]?.jsonPrimitive?.content ?: "BTC"}")
-            Button(onClick = { /* Navigate to task details */ }) {
+            Button(onClick = {
+                val taskId = task["id"]?.jsonPrimitive?.content ?: ""
+                navController.navigate("task_details/$taskId")
+            }) {
                 Text("View Details")
             }
         }
